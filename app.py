@@ -1,70 +1,32 @@
-import json
-
-from flask import Flask, render_template, request, jsonify, url_for, redirect
-from flask_socketio import SocketIO
+from flask import Flask, render_template, request, make_response
+import os
 
 app = Flask(__name__)
-socketio = SocketIO(app)
-urls_file = 'urls.json'
+URLS_FILE = "C:/Users/malik/Desktop/urls.txt"
 
 
 @app.route('/')
 def index():
-    return redirect(url_for('admin'))
-
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
-    if request.method == 'POST':
-        urls = request.form.get('urls')
-        try:
-            json.loads(urls)  # Validate JSON format
-            with open(urls_file, 'w') as file:
-                file.write(urls)
-        except json.JSONDecodeError:
-            return "Invalid JSON", 400
-        return redirect(url_for('admin'))
-    else:
-        try:
-            with open(urls_file, 'r') as file:
-                urls = file.read()
-        except FileNotFoundError:
-            urls = '[]'
-        return render_template('admin.html', urls=urls)
-
-
-@app.route('/display')
-def display():
-    try:
-        with open(urls_file, 'r') as file:
-            urls = json.load(file)
-    except FileNotFoundError:
-        urls = []
-    return render_template('display.html', urls=urls)
-
-
-@app.route('/update-urls', methods=['POST'])
-def update_urls():
-    data = request.get_json()
-    urls = data.get('urls', [])
-    try:
-        with open(urls_file, 'w') as file:
-            json.dump(urls, file)
-        socketio.emit('update', {'urls': urls})
-        return jsonify({'message': 'URL mis à jour avec succès'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return render_template('admin.html')
 
 
 @app.route('/get-urls', methods=['GET'])
 def get_urls():
-    try:
-        with open(urls_file, 'r') as file:
-            urls = json.load(file)
-    except FileNotFoundError:
-        urls = []
-    return jsonify(urls)
+    if os.path.exists(URLS_FILE):
+        with open(URLS_FILE, 'r') as file:
+            urls = file.read()
+    else:
+        urls = ''
+    return make_response(urls, 200)
+
+
+@app.route('/update-urls', methods=['POST'])
+def update_urls():
+    data = request.data.decode('utf-8')
+    with open(URLS_FILE, 'w') as file:
+        file.write(data)
+    return make_response('URLs successfully updated', 200)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=False, host='0.0.0.0')

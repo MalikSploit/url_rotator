@@ -37,24 +37,24 @@
 
         function saveUrls() {
             const inputs = document.querySelectorAll('#urlList input[type="text"]');
-            const urls = Array.from(inputs).map(input => input.value);
+            const urls = Array.from(inputs).map(input => input.value).join('\n'); // Join URLs with newline character
             const messageContainer = document.getElementById('messageContainer');
 
             fetch('/update-urls', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'text/plain', // Change content type to text/plain
                 },
-                body: JSON.stringify({urls: urls}),
+                body: urls, // Send URLs as plain text
             })
             .then(response => {
                 if (response.ok) {
-                    return response.json();
+                    return response.text();
                 }
-                throw new Error('Network response was not ok.');
+                throw new Error('Erreur réseau');
             })
-            .then(data => {
-                messageContainer.innerHTML = `<div class="text-sm text-green-700 bg-green-100 border border-green-400 px-4 py-3 rounded relative" role="alert">${data.message}</div>`;
+            .then(message => {
+                messageContainer.innerHTML = `<div class="text-sm text-green-700 bg-green-100 border border-green-400 px-4 py-3 rounded relative" role="alert">${message}</div>`;
                 setTimeout(() => messageContainer.innerHTML = '', 3000); // Clear message after 3 seconds
             })
             .catch(error => {
@@ -64,14 +64,13 @@
             });
         }
 
-
         window.onload = function() {
             fetch('/get-urls')
-            .then(response => response.json())
+            .then(response => response.text())
             .then(data => {
-                if (data.length > 0) {
-                    // Add a URL field for each URL
-                    data.forEach(url => addUrlField(url));
+                const urls = data.split('\n').filter(url => url.trim()); // Split URLs by newline and filter out empty lines
+                if (urls.length > 0) {
+                    urls.forEach(url => addUrlField(url));
                 } else {
                     addUrlField('https://example.com');
                 }
