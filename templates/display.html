@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affichage</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="urlFrame" src=""></iframe>
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var urls = {{ urls|tojson }};
+        var index = 0;
+        var interval = 10000; // Change URL every 10 seconds
+        var intervalId = null; // Store the interval ID here
+
+        socket.on('connect', function() {
+            console.log('Websocket connected!');
+        });
+
+        socket.on('update', function(data) {
+            console.log('Update received:', data);
+            urls = data.urls;
+            index = 0; // Reset index to start from the first URL again
+            updateDisplay(); // Call updateDisplay to restart the rotation with the new URLs
+        });
+
+        function rotateURL() {
+            if(urls.length > 0) {
+                var iframe = document.getElementById('urlFrame');
+                iframe.src = urls[index] || 'about:blank';
+                index = (index + 1) % urls.length;
+            }
+        }
+
+        function updateDisplay() {
+            // Clear any existing interval to avoid speeding up the rotation
+            if (intervalId !== null) {
+                clearInterval(intervalId);
+            }
+
+            // Immediately rotate to the current URL and set an interval for subsequent rotations
+            rotateURL();
+            intervalId = setInterval(rotateURL, interval);
+        }
+
+        window.onload = function() {
+            updateDisplay(); // Initialize the display when the page loads
+        };
+    </script>
+</body>
+</html>
