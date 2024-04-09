@@ -37,15 +37,15 @@
 
         function saveUrls() {
             const inputs = document.querySelectorAll('#urlList input[type="text"]');
-            const urls = Array.from(inputs).map(input => input.value).join('\n'); // Join URLs with newline character
+            const urls = Array.from(inputs).map(input => input.value).join('\n');
             const messageContainer = document.getElementById('messageContainer');
 
             fetch('/update-urls', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'text/plain', // Change content type to text/plain
+                    'Content-Type': 'text/plain',
                 },
-                body: urls, // Send URLs as plain text
+                body: urls,
             })
             .then(response => {
                 if (response.ok) {
@@ -72,7 +72,7 @@
                 if (urls.length > 0) {
                     urls.forEach(url => addUrlField(url));
                 } else {
-                    addUrlField('https://example.com');
+                    addUrlField('https://exemple.com');
                 }
             })
             .catch(error => {
